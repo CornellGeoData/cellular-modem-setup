@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the cellular link health check every 3 minutes
+
+[Timer]
+OnBootSec=3min
+# counted from the end of the previous run, so runs never overlap
+OnUnitInactiveSec=3min
+AccuracySec=20s
+
+[Install]
+WantedBy=timers.target

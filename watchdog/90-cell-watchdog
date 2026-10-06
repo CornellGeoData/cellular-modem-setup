@@ -1,0 +1,18 @@
+#!/bin/sh
+# NetworkManager dispatcher hook for cell-watchdog.
+#  - WiFi drops: check the cellular link right away instead of waiting for the next timer run.
+#  - The cellular connection comes up: check it 30 s later. A PPP session dialed seconds after the previous
+#    one ended abruptly (network hangup, ModemManager restart) can come up "activated" but pass no traffic.
+#    Skipped while cell-watchdog itself is re-activating (marker file), so it can't trigger itself in a loop.
+# Removing rx_bytes makes the check send a real ping instead of trusting the traffic counter.
+STATE=/run/cell-watchdog
+
+if [ "$1" = wlan0 ] && [ "$2" = down ]; then
+    rm -f "$STATE/rx_bytes"
+    systemctl start --no-block cell-watchdog.service
+elif [ "$2" = up ] && [ "$CONNECTION_ID" = kiwisim ] && [ ! -e "$STATE/recovering" ]; then
+    rm -f "$STATE/rx_bytes"
+    systemd-run --quiet --on-active=30s --timer-property=AccuracySec=5s \
+        systemctl start --no-block cell-watchdog.service
+fi
+exit 0

@@ -1,0 +1,13 @@
+# SIM7000G (1e0e:9001) tweaks for ModemManager.
+# 1) The modem drops off USB (reset loop) whenever ModemManager opens its QMI interface
+#    (cdc-wdm0 / wwan0, USB interface 05). Hide it so ModemManager uses the AT ports + PPP.
+# 2) Dial PPP on ttyUSB3 (interface 03) instead of the primary AT port ttyUSB2, so the
+#    control port never gets stuck in data mode.
+ACTION!="add|change|move|bind", GOTO="mm_sim7000_end"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9001", GOTO="mm_sim7000"
+GOTO="mm_sim7000_end"
+LABEL="mm_sim7000"
+SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_SIM7000_IFNUM}="$attr{bInterfaceNumber}"
+ENV{.MM_SIM7000_IFNUM}=="05", ENV{ID_MM_PORT_IGNORE}="1"
+ENV{.MM_SIM7000_IFNUM}=="03", SUBSYSTEM=="tty", ENV{ID_MM_PORT_TYPE_AT_SECONDARY}="", ENV{ID_MM_PORT_TYPE_AT_PPP}="1"
+LABEL="mm_sim7000_end"

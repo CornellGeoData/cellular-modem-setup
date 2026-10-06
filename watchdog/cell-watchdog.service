@@ -1,0 +1,7 @@
+[Unit]
+Description=Cellular link health check (NetworkManager connection kiwisim / ppp0)
+After=NetworkManager.service ModemManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cell-watchdog
